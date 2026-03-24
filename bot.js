@@ -25,14 +25,14 @@ app.post('/purchase-complete', (req, res) => {
 
   const user = client.users.cache.get(OWNER_ID);
   if (user) {
-    user.send(`**Someone has looked into buying ${name || 'Unknown'}**\nI'll update you when they have purchased.`).catch(console.error);
+    user.send(`**Someone has looked into buying ${name || 'Unknown Item'}**\nI'll update you when they have purchased.`).catch(e => console.error("DM failed:", e));
   }
 
   res.json({ success: true });
 });
 
-const TOKEN = "MTQ4NTg0NzUxOTczMTkxMjg0NA.G6-q9A.hoTVxVo9TOpcXcwrnJsIfTxlvOQc********"; // your full token
-client.login(TOKEN);
+const TOKEN = "MTQ4NTg0NzUxOTczMTkxMjg0NA.G6-q9A.hoTVxVo9TOpcXcwrnJsIfTxlvOQcTr2cDI7RvU";   // ← Paste the new full token here
+client.login(TOKEN).catch(e => console.error("❌ Login failed:", e));
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
