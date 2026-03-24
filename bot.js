@@ -33,11 +33,16 @@ app.post('/purchase-complete', (req, res) => {
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
-  console.error("❌ DISCORD_TOKEN environment variable is missing!");
+  console.error("❌ DISCORD_TOKEN environment variable is missing or empty!");
   process.exit(1);
 }
 
-client.login(TOKEN).catch(e => console.error("❌ Login failed:", e));
+console.log("🔑 Token loaded (length:", TOKEN.length, ")");
+
+client.login(TOKEN).catch(e => {
+  console.error("❌ Login failed:", e.message);
+  process.exit(1);
+});
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
