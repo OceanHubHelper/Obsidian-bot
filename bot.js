@@ -1,6 +1,5 @@
+// DEBUG BOT - Run this to test token and DM
 const { Client, GatewayIntentBits } = require('discord.js');
-const express = require('express');
-const bodyParser = require('body-parser');
 
 const client = new Client({
   intents: [
@@ -10,42 +9,35 @@ const client = new Client({
   ]
 });
 
-const app = express();
-app.use(bodyParser.json());
-
-const OWNER_ID = '1280339014033080442';
+const OWNER_ID = '1280339014033080442';   // Your user ID
 
 client.once('ready', () => {
-  console.log(`✅ Bot is online as ${client.user.tag}`);
-});
+  console.log(`✅ DEBUG BOT IS ONLINE as ${client.user.tag}`);
 
-app.post('/purchase-complete', (req, res) => {
-  const { name, username, proof } = req.body || {};
-  console.log('📩 Purchase received from shop:', req.body);
-
+  // Send DM to you
   const user = client.users.cache.get(OWNER_ID);
   if (user) {
-    user.send(`**🛒 New Purchase Attempt**\n\n` +
-              `**Brainrot:** ${name || 'Unknown'}\n` +
-              `**Username:** ${username || 'Unknown'}\n` +
-              `**Proof:** ${proof || 'No proof provided'}\n\n` +
-              `Please check and confirm in the shop.`).catch(e => console.error("DM failed:", e));
+    user.send(`**✅ Bot is online and working!**\n\nDebug test successful.\n\nToken length: ${process.env.DISCORD_TOKEN ? process.env.DISCORD_TOKEN.length : 'MISSING'}`).catch(e => console.error("DM failed:", e));
   } else {
-    console.log("⚠️ Owner user not found in cache");
+    console.log("⚠️ Could not find owner in cache");
   }
-
-  res.json({ success: true });
 });
 
+// Login with token from environment variable
 const TOKEN = process.env.DISCORD_TOKEN;
+
 if (!TOKEN) {
-  console.error("❌ DISCORD_TOKEN is missing!");
+  console.error("❌ ERROR: DISCORD_TOKEN environment variable is missing!");
+  console.log("Please add DISCORD_TOKEN in Railway Variables");
   process.exit(1);
 }
 
-client.login(TOKEN).catch(e => console.error("❌ Login failed:", e));
+console.log(`🔑 Token loaded (length: ${TOKEN.length})`);
+console.log(`🔑 First 10 chars: ${TOKEN.substring(0,10)}...`);
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`🚀 Bot webhook running on port ${PORT}`);
+client.login(TOKEN).catch(err => {
+  console.error("❌ LOGIN FAILED:", err.message);
+  if (err.message.includes("invalid token")) {
+    console.error("Token is invalid. Please reset it in Discord Developer Portal.");
+  }
 });
