@@ -21,11 +21,17 @@ client.once('ready', () => {
 
 app.post('/purchase-complete', (req, res) => {
   const { name, username, proof } = req.body || {};
-  console.log('📩 Purchase received:', req.body);
+  console.log('📩 Purchase received from shop:', req.body);
 
   const user = client.users.cache.get(OWNER_ID);
   if (user) {
-    user.send(`**Someone has looked into buying ${name || 'Unknown Item'}**\nI'll update you when they have purchased.`).catch(e => console.error("DM failed:", e));
+    user.send(`**🛒 New Purchase Attempt**\n\n` +
+              `**Brainrot:** ${name || 'Unknown'}\n` +
+              `**Username:** ${username || 'Unknown'}\n` +
+              `**Proof:** ${proof || 'No proof provided'}\n\n` +
+              `Please check and confirm in the shop.`).catch(e => console.error("DM failed:", e));
+  } else {
+    console.log("⚠️ Owner user not found in cache");
   }
 
   res.json({ success: true });
@@ -33,16 +39,11 @@ app.post('/purchase-complete', (req, res) => {
 
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
-  console.error("❌ DISCORD_TOKEN environment variable is missing or empty!");
+  console.error("❌ DISCORD_TOKEN is missing!");
   process.exit(1);
 }
 
-console.log("🔑 Token loaded (length:", TOKEN.length, ")");
-
-client.login(TOKEN).catch(e => {
-  console.error("❌ Login failed:", e.message);
-  process.exit(1);
-});
+client.login(TOKEN).catch(e => console.error("❌ Login failed:", e));
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
