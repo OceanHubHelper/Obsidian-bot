@@ -16,7 +16,7 @@ app.use(bodyParser.json());
 const OWNER_ID = '1280339014033080442';   // Your Discord ID
 
 // ====================== YOUR STORE URL HERE ======================
-const STORE_URL = 'https://YOUR-STORE-RAILWAY-URL.up.railway.app';   // ← CHANGE THIS!
+const STORE_URL = 'https://obsidianx-shop.up.railway.app/';   // ← CHANGE THIS!
 // =================================================================
 
 client.once('ready', () => {
